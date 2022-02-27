@@ -14,7 +14,7 @@ contract NFPeace is
     IERC1155Receiver,
     ReentrancyGuard
 {
-    /// @notice Unchain (https://unchain.fund) is a charity project created by blockchain activists. Our goal is to break the chain of war which the Russian Federation started against Ukraine.
+    /// @notice Unchain (https://unchain.fund) is a charity project created by blockchain activists. Its goal is to break the chain of war which the Russian Federation started against Ukraine.
     /// @dev The wallet address of the humanitarian relief fund unchain.fund
     address payable public constant CHARITY_ADDRESS = payable(0x10E1439455BD2624878b243819E31CfEE9eb721C);
 
