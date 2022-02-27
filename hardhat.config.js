@@ -14,7 +14,7 @@ const HARDHAT_NETWORK_CONFIG = {
   chainId: 1337,
   forking: {
     url: process.env.MAINNET_URL || '',
-    blockNumber: 14124444, // Feb 2nd
+    blockNumber: 14285500, // Feb 27th
   },
 }
 

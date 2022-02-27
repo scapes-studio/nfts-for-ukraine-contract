@@ -2,10 +2,10 @@
 pragma solidity ^0.8.11;
 
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 
 contract NFTsForUkraine is
@@ -14,6 +14,7 @@ contract NFTsForUkraine is
     IERC1155Receiver,
     ReentrancyGuard
 {
+    /// @notice Unchain (https://unchain.fund) is a charity project created by blockchain activists. Our goal is to break the chain of war which the Russian Federation started against Ukraine.
     /// @dev The wallet address of the humanitarian relief fund unchain.fund
     address public constant CHARITY_ADDRESS = 0x10E1439455BD2624878b243819E31CfEE9eb721C;
 
@@ -197,10 +198,9 @@ contract NFTsForUkraine is
 
     /// @dev Get the starting price based on default or user input. Warns users about out of range price.
     function _getStartingPrice (bytes calldata data) internal pure returns (uint64) {
-        uint256 price = abi.decode(data, (uint256));
-        require(price < 18.44 ether, "Starting price too high");
+        uint64 price = toUint64(data);
 
-        return price > DEFAULT_STARTING_PRICE ? uint64(price) : DEFAULT_STARTING_PRICE;
+        return price > DEFAULT_STARTING_PRICE ? price : DEFAULT_STARTING_PRICE;
     }
 
     /// @dev Initializes an auction
@@ -255,5 +255,19 @@ contract NFTsForUkraine is
         return percentageIncreasePrice - auction.latestBid < auction.startingPrice
             ? auction.latestBid + auction.startingPrice
             : percentageIncreasePrice;
+    }
+
+    /// @dev Transform a bytes string into a uint64. If no string provided, return 0
+    function toUint64(bytes memory _bytes) internal pure returns (uint64) {
+        if (_bytes.length == 0) return 0;
+
+        require(_bytes.length <= 8, "toUint64_outOfBounds");
+        uint64 tempUint;
+
+        assembly {
+            tempUint := mload(add(add(_bytes, 0x8), 0))
+        }
+
+        return tempUint;
     }
 }
