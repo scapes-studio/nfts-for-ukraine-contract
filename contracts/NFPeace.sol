@@ -8,7 +8,7 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 
-contract NFTsForUkraine is
+contract NFPeace is
     ERC165,
     IERC721Receiver,
     IERC1155Receiver,
@@ -18,9 +18,11 @@ contract NFTsForUkraine is
     /// @dev The wallet address of the humanitarian relief fund unchain.fund
     address payable public constant CHARITY_ADDRESS = payable(0x10E1439455BD2624878b243819E31CfEE9eb721C);
 
+    /// @notice Minimum auction duration after a bid in seconds (15 minutes).
     /// @dev Minimum auction runtime in seconds after new bids
     uint32 public constant BIDDING_GRACE_PERIOD = 15 minutes;
 
+    /// @notice Each bid has to increase by at least 10%
     /// @dev The minimum percentage increase per bid
     uint32 public constant BID_PERCENTAGE_INCREASE = 10;
 

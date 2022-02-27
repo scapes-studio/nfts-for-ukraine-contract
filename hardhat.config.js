@@ -36,7 +36,7 @@ module.exports = {
       url: process.env.MAINNET_URL || '',
       accounts:
         process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
-      gasPrice: 120000000000 // 120 Gwei max on mainnet
+      gasPrice: 60000000000 // 60 Gwei max on mainnet
     },
     rinkeby: {
       url: process.env.RINKEBY_URL || '',
@@ -52,7 +52,7 @@ module.exports = {
   },
   gasReporter: {
     enabled: process.env.REPORT_GAS !== undefined,
-    // gasPrice: 80,
+    gasPrice: 50,
     currency: 'USD',
     coinmarketcap: process.env.COINMARKETCAP_API_KEY,
   },

@@ -1,8 +1,8 @@
 const { expect } = require('chai')
 const { ethers } = require('hardhat')
-const { nowInSeconds } = require('./../helpers/time')
+const { nowInSeconds } = require('../helpers/time')
 
-const CHARITY_ADDRESS = '0x10E1439455BD2624878b243819E31CfEE9eb721C';
+const CHARITY_ADDRESS = '0x10E1439455BD2624878b243819E31CfEE9eb721C'
 const COMMUNITY_VAULT = '0xFF9774E77966a96b920791968a41aa840DEdE507'
 const TWENTY_SEVEN_YEAR_SCAPES = '0x5D3d01a47a62BfF2eB86eBA75F3A23c38dC22fBA'
 const WAGMI_TABLE = '0x64Ab884e14DEA5A82C8513c16440Cd6cB40f5eFE'
@@ -11,17 +11,17 @@ const AKUTI = '0x2D68A6EdEe8323eb9ec0bD421637E7abB7748D98'
 const EIGHT_EIGHT_EIGHT = '0x715565Baf69AFcbBE88f56D46F1c9FE2df828705'
 const THE_10KTF = '0x7DaEC605E9e2a1717326eeDFd660601e2753A057'
 
-describe('NFTsForUkraine', function () {
+describe('NFPeace', function () {
   let
-    NFTsForUkraine,
-    nftsForUkraineContract,
+    NFPeace,
+    nfPeaceContract,
     owner,
     person1,
     person2,
     addrs
 
   before(async () => {
-    NFTsForUkraine = await ethers.getContractFactory('NFTsForUkraine')
+    NFPeace = await ethers.getContractFactory('NFPeace')
 
     const now = nowInSeconds()
     await hre.network.provider.send('evm_setNextBlockTimestamp', [now])
@@ -32,16 +32,16 @@ describe('NFTsForUkraine', function () {
   })
 
   beforeEach(async () => {
-    nftsForUkraineContract = await NFTsForUkraine.deploy()
-    await nftsForUkraineContract.deployed()
+    nfPeaceContract = await NFPeace.deploy()
+    await nfPeaceContract.deployed()
   })
 
   describe('Deployment', () => {
     it('should set core data', async () => {
-      expect(await nftsForUkraineContract.CHARITY_ADDRESS()).to.equal('0x10E1439455BD2624878b243819E31CfEE9eb721C')
-      expect(await nftsForUkraineContract.BIDDING_GRACE_PERIOD()).to.equal(900)
-      expect(await nftsForUkraineContract.BID_PERCENTAGE_INCREASE()).to.equal(10)
-      expect(await nftsForUkraineContract.DEFAULT_STARTING_PRICE()).to.equal('50000000000000000')
+      expect(await nfPeaceContract.CHARITY_ADDRESS()).to.equal('0x10E1439455BD2624878b243819E31CfEE9eb721C')
+      expect(await nfPeaceContract.BIDDING_GRACE_PERIOD()).to.equal(900)
+      expect(await nfPeaceContract.BID_PERCENTAGE_INCREASE()).to.equal(10)
+      expect(await nfPeaceContract.DEFAULT_STARTING_PRICE()).to.equal('50000000000000000')
     })
   })
 
@@ -53,7 +53,7 @@ describe('NFTsForUkraine', function () {
 
     const startAuction = (id = 7374) => punkscapeContract.connect(cv)[`safeTransferFrom(address,address,uint256)`](
       COMMUNITY_VAULT,
-      nftsForUkraineContract.address,
+      nfPeaceContract.address,
       id
     )
 
@@ -75,13 +75,13 @@ describe('NFTsForUkraine', function () {
         await expect(await punkscapeContract
           .connect(cv)[`safeTransferFrom(address,address,uint256)`](
             COMMUNITY_VAULT,
-            nftsForUkraineContract.address,
+            nfPeaceContract.address,
             8433)
         )
-          .to.emit(nftsForUkraineContract, 'AuctionInitialised')
+          .to.emit(nfPeaceContract, 'AuctionInitialised')
           .withArgs(0)
 
-        const auction = await nftsForUkraineContract.getAuction(0)
+        const auction = await nfPeaceContract.getAuction(0)
         expect(auction.tokenContract).to.equal(punkscapeContract.address)
         expect(auction.tokenId).to.equal(8433)
         expect(auction.latestBidder).to.equal(COMMUNITY_VAULT)
@@ -97,10 +97,10 @@ describe('NFTsForUkraine', function () {
         await expect(await punkscapeContract
           .connect(cv)[`safeTransferFrom(address,address,uint256)`](
             COMMUNITY_VAULT,
-            nftsForUkraineContract.address,
+            nfPeaceContract.address,
             2676)
         )
-          .to.emit(nftsForUkraineContract, 'AuctionInitialised')
+          .to.emit(nfPeaceContract, 'AuctionInitialised')
           .withArgs(1)
       })
 
@@ -108,15 +108,15 @@ describe('NFTsForUkraine', function () {
         await expect(await twentySevenYearScapesContract
           .connect(cv)[`safeTransferFrom(address,address,uint256,bytes)`](
             COMMUNITY_VAULT,
-            nftsForUkraineContract.address,
+            nfPeaceContract.address,
             19,
             ethers.utils.arrayify(ethers.utils.parseEther('2'))
           )
         )
-          .to.emit(nftsForUkraineContract, 'AuctionInitialised')
+          .to.emit(nfPeaceContract, 'AuctionInitialised')
           .withArgs(0)
 
-        const auction = await nftsForUkraineContract.getAuction(0)
+        const auction = await nfPeaceContract.getAuction(0)
         expect(auction.startingPrice).to.equal(ethers.utils.parseEther('2'))
       })
 
@@ -125,7 +125,7 @@ describe('NFTsForUkraine', function () {
           wagmiTableContract
             .connect(cv)[`safeTransferFrom(address,address,uint256,bytes)`](
               COMMUNITY_VAULT,
-              nftsForUkraineContract.address,
+              nfPeaceContract.address,
               129,
               ethers.utils.arrayify(ethers.utils.parseEther('19'))
             )
@@ -161,16 +161,16 @@ describe('NFTsForUkraine', function () {
         await expect(await eightEightEightContract
           .connect(akuti).safeTransferFrom(
             AKUTI, // from
-            nftsForUkraineContract.address, // to
+            nfPeaceContract.address, // to
             1, // id
             1, // amount
             ethers.utils.arrayify(0) // data
           )
         )
-          .to.emit(nftsForUkraineContract, 'AuctionInitialised')
+          .to.emit(nfPeaceContract, 'AuctionInitialised')
           .withArgs(0)
 
-        const auction = await nftsForUkraineContract.getAuction(0)
+        const auction = await nfPeaceContract.getAuction(0)
         expect(auction.tokenContract).to.equal(eightEightEightContract.address)
         expect(auction.tokenId).to.equal(1)
         expect(auction.latestBidder).to.equal(AKUTI)
@@ -187,16 +187,16 @@ describe('NFTsForUkraine', function () {
         await expect(await eightEightEightContract
           .connect(akuti).safeTransferFrom(
             AKUTI, // from
-            nftsForUkraineContract.address, // to
+            nfPeaceContract.address, // to
             1, // id
             2, // amount
             ethers.utils.arrayify(0) // data
           )
         )
-          .to.emit(nftsForUkraineContract, 'AuctionInitialised')
+          .to.emit(nfPeaceContract, 'AuctionInitialised')
           .withArgs(0)
 
-        const auction = await nftsForUkraineContract.getAuction(0)
+        const auction = await nfPeaceContract.getAuction(0)
         expect(auction.tokenAmount).to.equal(2)
       })
 
@@ -204,21 +204,21 @@ describe('NFTsForUkraine', function () {
         await expect(await the10KTFContract
           .connect(akuti).safeBatchTransferFrom(
             AKUTI, // from
-            nftsForUkraineContract.address, // to
+            nfPeaceContract.address, // to
             [2, 4], // id
             [1, 1], // amount
             ethers.utils.arrayify(ethers.utils.parseEther('5')) // data
           )
         )
-          .to.emit(nftsForUkraineContract, 'AuctionInitialised')
+          .to.emit(nfPeaceContract, 'AuctionInitialised')
           .withArgs(0)
-          .to.emit(nftsForUkraineContract, 'AuctionInitialised')
+          .to.emit(nfPeaceContract, 'AuctionInitialised')
           .withArgs(1)
 
-        const auction1 = await nftsForUkraineContract.getAuction(0)
+        const auction1 = await nfPeaceContract.getAuction(0)
         expect(auction1.tokenId).to.equal(2)
         expect(auction1.startingPrice).to.equal(ethers.utils.parseEther('5'))
-        const auction2 = await nftsForUkraineContract.getAuction(1)
+        const auction2 = await nfPeaceContract.getAuction(1)
         expect(auction2.tokenId).to.equal(4)
         expect(auction2.startingPrice).to.equal(ethers.utils.parseEther('5'))
       })
@@ -229,12 +229,12 @@ describe('NFTsForUkraine', function () {
         await startAuction(7374)
         const value = ethers.utils.parseEther('0.2')
 
-        await expect(nftsForUkraineContract.connect(person1).bid(0, { value }))
-          .to.emit(nftsForUkraineContract, 'Bid')
+        await expect(nfPeaceContract.connect(person1).bid(0, { value }))
+          .to.emit(nfPeaceContract, 'Bid')
           .withArgs(0, value, person1.address)
 
-          expect(await nftsForUkraineContract.currentBidPrice(0)).to.equal(ethers.utils.parseEther('0.25'))
-          const auction = await nftsForUkraineContract.getAuction(0)
+          expect(await nfPeaceContract.currentBidPrice(0)).to.equal(ethers.utils.parseEther('0.25'))
+          const auction = await nfPeaceContract.getAuction(0)
           expect(auction.latestBidder).to.equal(person1.address)
           expect(auction.latestBid).to.equal(ethers.utils.parseEther('0.2'))
           expect(auction.settled).to.equal(false)
@@ -245,7 +245,7 @@ describe('NFTsForUkraine', function () {
         await startAuction(4804)
 
         let value = ethers.utils.parseEther('0.2')
-        await nftsForUkraineContract.connect(person1).bid(0, { value })
+        await nfPeaceContract.connect(person1).bid(0, { value })
 
         block = await ethers.provider.getBlock('latest')
 
@@ -255,18 +255,18 @@ describe('NFTsForUkraine', function () {
         await hre.network.provider.send('evm_mine')
 
         value = ethers.utils.parseEther('0.3')
-        await expect(nftsForUkraineContract.connect(person2).bid(0, { value }))
-          .to.emit(nftsForUkraineContract, 'AuctionExtended')
+        await expect(nfPeaceContract.connect(person2).bid(0, { value }))
+          .to.emit(nfPeaceContract, 'AuctionExtended')
         block = await ethers.provider.getBlock('latest')
         in15Minutes = block.timestamp + 900
-        expect((await nftsForUkraineContract.getAuction(0)).endTimestamp).to.equal(in15Minutes)
+        expect((await nfPeaceContract.getAuction(0)).endTimestamp).to.equal(in15Minutes)
 
         const another15Minutes = 920
         await hre.network.provider.send('evm_increaseTime', [another15Minutes])
         await hre.network.provider.send('evm_mine')
 
         value = ethers.utils.parseEther('0.4')
-        await expect(nftsForUkraineContract.connect(person1).bid(0, { value }))
+        await expect(nfPeaceContract.connect(person1).bid(0, { value }))
           .to.be.revertedWith('Auction is not active.')
       })
 
@@ -274,10 +274,10 @@ describe('NFTsForUkraine', function () {
         await startAuction(6954)
 
         let value = ethers.utils.parseEther('0.2')
-        await nftsForUkraineContract.connect(person1).bid(0, { value })
+        await nfPeaceContract.connect(person1).bid(0, { value })
 
         value = ethers.utils.parseEther('0.3')
-        await expect(await nftsForUkraineContract.connect(person2).bid(0, { value }))
+        await expect(await nfPeaceContract.connect(person2).bid(0, { value }))
           .to.changeEtherBalance(person1, ethers.utils.parseEther('0.2'))
       })
     })
@@ -286,7 +286,7 @@ describe('NFTsForUkraine', function () {
       it('should not allow someone to settle an auction before it is complete', async () => {
         await startAuction(9898)
 
-        await expect(nftsForUkraineContract.connect(person1).settle(0))
+        await expect(nfPeaceContract.connect(person1).settle(0))
           .to.be.revertedWith('Auction not complete.')
       })
 
@@ -294,7 +294,7 @@ describe('NFTsForUkraine', function () {
         await startAuction(3210)
 
         let value = ethers.utils.parseEther('0.2')
-        await nftsForUkraineContract.connect(person1).bid(0, { value })
+        await nfPeaceContract.connect(person1).bid(0, { value })
 
         const afterAuction = 24 * 60 * 60 + 20 // 24h and 20s
         await hre.network.provider.send('evm_increaseTime', [afterAuction])
@@ -302,19 +302,19 @@ describe('NFTsForUkraine', function () {
 
         const charityBalance = await ethers.provider.getBalance(CHARITY_ADDRESS)
 
-        await expect(await nftsForUkraineContract.connect(person2).settle(0))
-          .to.emit(nftsForUkraineContract, 'AuctionSettled')
+        await expect(await nfPeaceContract.connect(person2).settle(0))
+          .to.emit(nfPeaceContract, 'AuctionSettled')
           .withArgs(0)
 
         expect(await ethers.provider.getBalance(CHARITY_ADDRESS)).to.equal(charityBalance.add(value))
         expect(await punkscapeContract.ownerOf(3210)).to.equal(person1.address)
 
-        const auction = await nftsForUkraineContract.getAuction(0)
+        const auction = await nfPeaceContract.getAuction(0)
         expect(auction.latestBidder).to.equal(person1.address)
         expect(auction.latestBid).to.equal(ethers.utils.parseEther('0.2'))
         expect(auction.settled).to.equal(true)
 
-        await expect(nftsForUkraineContract.connect(person2).settle(0))
+        await expect(nfPeaceContract.connect(person2).settle(0))
           .to.be.revertedWith('Auction already settled.')
       })
 
@@ -327,21 +327,21 @@ describe('NFTsForUkraine', function () {
 
         const charityBalance = await ethers.provider.getBalance(CHARITY_ADDRESS)
 
-        await expect(await nftsForUkraineContract.connect(person1).settle(0))
-          .to.emit(nftsForUkraineContract, 'AuctionSettled')
+        await expect(await nfPeaceContract.connect(person1).settle(0))
+          .to.emit(nfPeaceContract, 'AuctionSettled')
           .withArgs(0)
 
         expect(await ethers.provider.getBalance(CHARITY_ADDRESS)).to.equal(charityBalance)
         expect(await punkscapeContract.ownerOf(4735)).to.equal(COMMUNITY_VAULT)
 
-        const auction = await nftsForUkraineContract.getAuction(0)
+        const auction = await nfPeaceContract.getAuction(0)
         expect(auction.latestBidder).to.equal(COMMUNITY_VAULT)
         expect(auction.latestBid).to.equal(ethers.utils.parseEther('0'))
         expect(auction.settled).to.equal(true)
       })
 
       it(`should not allow anyone to settle an auction that doesn't exist`, async () => {
-        await expect(nftsForUkraineContract.connect(person1).settle(0))
+        await expect(nfPeaceContract.connect(person1).settle(0))
           .to.be.revertedWith('Auction does not exist.')
       })
     })
