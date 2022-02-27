@@ -16,7 +16,7 @@ contract NFTsForUkraine is
 {
     /// @notice Unchain (https://unchain.fund) is a charity project created by blockchain activists. Our goal is to break the chain of war which the Russian Federation started against Ukraine.
     /// @dev The wallet address of the humanitarian relief fund unchain.fund
-    address public constant CHARITY_ADDRESS = 0x10E1439455BD2624878b243819E31CfEE9eb721C;
+    address payable public constant CHARITY_ADDRESS = payable(0x10E1439455BD2624878b243819E31CfEE9eb721C);
 
     /// @dev Minimum auction runtime in seconds after new bids
     uint32 public constant BIDDING_GRACE_PERIOD = 15 minutes;
@@ -126,15 +126,17 @@ contract NFTsForUkraine is
     function settle (uint64 auctionId) external {
         Auction storage auction = _auctions[auctionId];
         require(!auction.settled, "Auction already settled");
+        require(block.timestamp > auction.endTimestamp, "Auction not complete.");
+
+        if (_hasBid(auction)) {
+            (bool success,) = CHARITY_ADDRESS.call{ value: auction.latestBid }("");
+            require(success, "Failed to forward funds");
+        }
 
         if (auction.tokenERCStandard == 721) {
             IERC721(auction.tokenContract).safeTransferFrom(address(this), auction.latestBidder, auction.tokenId, "");
         } else if (auction.tokenERCStandard == 1155) {
             IERC1155(auction.tokenContract).safeTransferFrom(address(this), auction.latestBidder, auction.tokenId, auction.tokenAmount, "");
-        }
-
-        if (_hasBid(auction)) {
-            payable(CHARITY_ADDRESS).transfer(auction.latestBid);
         }
 
         // End the auction

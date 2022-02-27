@@ -2,6 +2,7 @@ const { expect } = require('chai')
 const { ethers } = require('hardhat')
 const { nowInSeconds } = require('./../helpers/time')
 
+const CHARITY_ADDRESS = '0x10E1439455BD2624878b243819E31CfEE9eb721C';
 const COMMUNITY_VAULT = '0xFF9774E77966a96b920791968a41aa840DEdE507'
 const TWENTY_SEVEN_YEAR_SCAPES = '0x5D3d01a47a62BfF2eB86eBA75F3A23c38dC22fBA'
 const WAGMI_TABLE = '0x64Ab884e14DEA5A82C8513c16440Cd6cB40f5eFE'
@@ -49,6 +50,12 @@ describe('NFTsForUkraine', function () {
     let twentySevenYearScapesContract
     let wagmiTableContract
     let punkscapeContract
+
+    const startAuction = (id = 7374) => punkscapeContract.connect(cv)[`safeTransferFrom(address,address,uint256)`](
+      COMMUNITY_VAULT,
+      nftsForUkraineContract.address,
+      id
+    )
 
     before(async () => {
       await hre.network.provider.request({
@@ -218,12 +225,6 @@ describe('NFTsForUkraine', function () {
     })
 
     describe('Bids', () => {
-      const startAuction = (id = 7374) => punkscapeContract.connect(cv)[`safeTransferFrom(address,address,uint256)`](
-        COMMUNITY_VAULT,
-        nftsForUkraineContract.address,
-        id
-      )
-
       it('should allow bids on started auctions and update the current price afterwards', async () => {
         await startAuction(7374)
         const value = ethers.utils.parseEther('0.2')
@@ -282,7 +283,59 @@ describe('NFTsForUkraine', function () {
     })
 
     describe('Settle', () => {
+      it('should not allow someone to settle an auction before it is complete', async () => {
+        await startAuction(9898)
 
+        await expect(nftsForUkraineContract.connect(person1).settle(0))
+          .to.be.revertedWith('Auction not complete.')
+      })
+
+      it('should allow someone to settle the auction when it is complete with bids', async () => {
+        await startAuction(3210)
+
+        let value = ethers.utils.parseEther('0.2')
+        await nftsForUkraineContract.connect(person1).bid(0, { value })
+
+        const afterAuction = 24 * 60 * 60 + 20 // 24h and 20s
+        await hre.network.provider.send('evm_increaseTime', [afterAuction])
+        await hre.network.provider.send('evm_mine')
+
+        const charityBalance = await ethers.provider.getBalance(CHARITY_ADDRESS)
+
+        await expect(await nftsForUkraineContract.connect(person2).settle(0))
+          .to.emit(nftsForUkraineContract, 'AuctionSettled')
+          .withArgs(0)
+
+        expect(await ethers.provider.getBalance(CHARITY_ADDRESS)).to.equal(charityBalance.add(value))
+        expect(await punkscapeContract.ownerOf(3210)).to.equal(person1.address)
+
+        const auction = await nftsForUkraineContract.getAuction(0)
+        expect(auction.latestBidder).to.equal(person1.address)
+        expect(auction.latestBid).to.equal(ethers.utils.parseEther('0.2'))
+        expect(auction.settled).to.equal(true)
+      })
+
+      it('should allow someone to settle the auction when it is complete without bids', async () => {
+        await startAuction(4735)
+
+        const afterAuction = 24 * 60 * 60 + 20 // 24h and 20s
+        await hre.network.provider.send('evm_increaseTime', [afterAuction])
+        await hre.network.provider.send('evm_mine')
+
+        const charityBalance = await ethers.provider.getBalance(CHARITY_ADDRESS)
+
+        await expect(await nftsForUkraineContract.connect(person1).settle(0))
+          .to.emit(nftsForUkraineContract, 'AuctionSettled')
+          .withArgs(0)
+
+        expect(await ethers.provider.getBalance(CHARITY_ADDRESS)).to.equal(charityBalance)
+        expect(await punkscapeContract.ownerOf(4735)).to.equal(COMMUNITY_VAULT)
+
+        const auction = await nftsForUkraineContract.getAuction(0)
+        expect(auction.latestBidder).to.equal(COMMUNITY_VAULT)
+        expect(auction.latestBid).to.equal(ethers.utils.parseEther('0'))
+        expect(auction.settled).to.equal(true)
+      })
     })
   })
 })
