@@ -313,6 +313,9 @@ describe('NFTsForUkraine', function () {
         expect(auction.latestBidder).to.equal(person1.address)
         expect(auction.latestBid).to.equal(ethers.utils.parseEther('0.2'))
         expect(auction.settled).to.equal(true)
+
+        await expect(nftsForUkraineContract.connect(person2).settle(0))
+          .to.be.revertedWith('Auction already settled.')
       })
 
       it('should allow someone to settle the auction when it is complete without bids', async () => {
@@ -335,6 +338,11 @@ describe('NFTsForUkraine', function () {
         expect(auction.latestBidder).to.equal(COMMUNITY_VAULT)
         expect(auction.latestBid).to.equal(ethers.utils.parseEther('0'))
         expect(auction.settled).to.equal(true)
+      })
+
+      it(`should not allow anyone to settle an auction that doesn't exist`, async () => {
+        await expect(nftsForUkraineContract.connect(person1).settle(0))
+          .to.be.revertedWith('Auction does not exist.')
       })
     })
   })

@@ -125,7 +125,8 @@ contract NFTsForUkraine is
     /// @param auctionId The Auction ID to claim.
     function settle (uint64 auctionId) external {
         Auction storage auction = _auctions[auctionId];
-        require(!auction.settled, "Auction already settled");
+        require(!auction.settled, "Auction already settled.");
+        require(auction.endTimestamp > 0, "Auction does not exist.");
         require(block.timestamp > auction.endTimestamp, "Auction not complete.");
 
         if (_hasBid(auction)) {
