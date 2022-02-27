@@ -17,20 +17,17 @@ contract NFTsForUkraine is
     /// @dev The wallet address of the humanitarian relief fund unchain.fund
     address public constant CHARITY_ADDRESS = 0x10E1439455BD2624878b243819E31CfEE9eb721C;
 
-    /// @dev The next auction ID
-    uint64 public nextAuctionId = 0;
+    /// @dev Minimum auction runtime in seconds after new bids
+    uint32 public constant BIDDING_GRACE_PERIOD = 15 minutes;
+
+    /// @dev The minimum percentage increase per bid
+    uint32 public constant BID_PERCENTAGE_INCREASE = 10;
 
     /// @dev The minimum value of an auction
-    uint64 private _defaultStartingPrice = 0.05 ether;
+    uint64 public constant DEFAULT_STARTING_PRICE = 0.05 ether;
 
-    /// @dev Minimum auction runtime in seconds after new bids
-    uint32 private _biddingGracePeriod = 15 minutes;
-
-    /// @dev The minimum basis points increase per bid
-    uint32 private _bidBasisIncrease = 1000; // 10%
-
-    /// @dev Each auction is identified by an ID
-    mapping(uint256 => Auction) private _auctions;
+    /// @dev The next auction ID
+    uint64 public nextAuctionId = 0;
 
     struct Auction {
         address tokenContract;
@@ -44,20 +41,23 @@ contract NFTsForUkraine is
         bool settled;
     }
 
-    /// @dev Emitted when a new bid is entered.
-    event AuctionInitialised(uint256 indexed auctionId);
+    /// @dev Each auction is identified by an ID
+    mapping(uint256 => Auction) private _auctions;
 
     /// @dev Emitted when a new bid is entered.
-    event Bid(uint256 indexed auctionId, uint256 indexed bid, address indexed from);
+    event AuctionInitialised(uint64 indexed auctionId);
 
-    /// @dev Emitted when a new bid is entered within the _biddingGracePeriod.
-    event AuctionExtended(uint256 indexed auctionId, uint256 indexed endTimestamp);
+    /// @dev Emitted when a new bid is entered.
+    event Bid(uint64 indexed auctionId, uint256 indexed bid, address indexed from);
+
+    /// @dev Emitted when a new bid is entered within the BIDDING_GRACE_PERIOD.
+    event AuctionExtended(uint64 indexed auctionId, uint256 indexed endTimestamp);
 
     /// @dev Emitted when an auction is settled, the NFT is sent to the winner and the funds sent to the charity.
-    event AuctionSettled(uint256 indexed auctionId, uint256 indexed endTimestamp);
+    event AuctionSettled(uint64 indexed auctionId);
 
     /// @dev Get an Auction by its ID
-    function getAuction (uint256 auctionId)
+    function getAuction (uint64 auctionId)
         public view
         returns (
             address tokenContract,
@@ -86,7 +86,7 @@ contract NFTsForUkraine is
     }
 
     /// @dev The minimum value of the next bid for an auction.
-    function currentBidPrice (uint256 auctionId)
+    function currentBidPrice (uint64 auctionId)
         external view
         returns (uint128)
     {
@@ -95,7 +95,7 @@ contract NFTsForUkraine is
 
     /// @dev Enter a new bid
     /// @param auctionId The Auction ID to bid on
-    function bid (uint256 auctionId)
+    function bid (uint64 auctionId)
         external payable
         nonReentrant
     {
@@ -122,7 +122,7 @@ contract NFTsForUkraine is
 
     /// @dev Settles an auction
     /// @param auctionId The Auction ID to claim.
-    function settle (uint256 auctionId) external {
+    function settle (uint64 auctionId) external {
         Auction storage auction = _auctions[auctionId];
         require(!auction.settled, "Auction already settled");
 
@@ -138,6 +138,7 @@ contract NFTsForUkraine is
 
         // End the auction
         auction.settled = true;
+        emit AuctionSettled(auctionId);
     }
 
     /// @dev Hook for `saveTransferFrom` of ERC721 tokens to this contract
@@ -195,11 +196,11 @@ contract NFTsForUkraine is
     }
 
     /// @dev Get the starting price based on default or user input. Warns users about out of range price.
-    function _getStartingPrice (bytes calldata data) internal view returns (uint64) {
+    function _getStartingPrice (bytes calldata data) internal pure returns (uint64) {
         uint256 price = abi.decode(data, (uint256));
         require(price < 18.44 ether, "Starting price too high");
 
-        return price > _defaultStartingPrice ? uint64(price) : _defaultStartingPrice;
+        return price > DEFAULT_STARTING_PRICE ? uint64(price) : DEFAULT_STARTING_PRICE;
     }
 
     /// @dev Initializes an auction
@@ -223,15 +224,17 @@ contract NFTsForUkraine is
             false                                // the auction is not settled
         );
 
+        emit AuctionInitialised(nextAuctionId);
+
         nextAuctionId++;
     }
 
     /// @dev Extends the end time of an auction if we are within the grace period.
-    function _maybeExtendTime (uint256 auctionId, Auction storage auction) internal {
-        uint64 gracePeriodStart = auction.endTimestamp - _biddingGracePeriod;
+    function _maybeExtendTime (uint64 auctionId, Auction storage auction) internal {
+        uint64 gracePeriodStart = auction.endTimestamp - BIDDING_GRACE_PERIOD;
         uint64 _now = uint64(block.timestamp);
         if (_now > gracePeriodStart) {
-            auction.endTimestamp = uint32(_now + _biddingGracePeriod);
+            auction.endTimestamp = uint32(_now + BIDDING_GRACE_PERIOD);
 
             emit AuctionExtended(auctionId, auction.endTimestamp);
         }
@@ -243,12 +246,12 @@ contract NFTsForUkraine is
     }
 
     /// @dev Calculates the minimum price for the next bid
-    function _currentBidPrice (Auction memory auction) internal view returns (uint128) {
+    function _currentBidPrice (Auction memory auction) internal pure returns (uint128) {
         if (! _hasBid(auction)) {
             return auction.startingPrice;
         }
 
-        uint128 percentageIncreasePrice = auction.latestBid * (10000 + _bidBasisIncrease) / 10000;
+        uint128 percentageIncreasePrice = auction.latestBid * (100 + BID_PERCENTAGE_INCREASE) / 100;
         return percentageIncreasePrice - auction.latestBid < auction.startingPrice
             ? auction.latestBid + auction.startingPrice
             : percentageIncreasePrice;
