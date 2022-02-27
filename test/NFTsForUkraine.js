@@ -45,24 +45,24 @@ describe('NFTsForUkraine', function () {
   })
 
   describe('Auctions', () => {
-    describe('Initialize ERC721', () => {
-      let cv
-      let twentySevenYearScapesContract
-      let wagmiTableContract
-      let punkscapeContract
+    let cv
+    let twentySevenYearScapesContract
+    let wagmiTableContract
+    let punkscapeContract
 
-      beforeEach(async () => {
-        await hre.network.provider.request({
-          method: 'hardhat_impersonateAccount',
-          params: [COMMUNITY_VAULT],
-        })
-        cv = await ethers.getSigner(COMMUNITY_VAULT)
-
-        twentySevenYearScapesContract = await ethers.getContractAt('IERC721', TWENTY_SEVEN_YEAR_SCAPES)
-        wagmiTableContract = await ethers.getContractAt('IERC721', WAGMI_TABLE)
-        punkscapeContract = await ethers.getContractAt('IERC721', PUNKSCAPE)
+    before(async () => {
+      await hre.network.provider.request({
+        method: 'hardhat_impersonateAccount',
+        params: [COMMUNITY_VAULT],
       })
+      cv = await ethers.getSigner(COMMUNITY_VAULT)
 
+      twentySevenYearScapesContract = await ethers.getContractAt('IERC721', TWENTY_SEVEN_YEAR_SCAPES)
+      wagmiTableContract = await ethers.getContractAt('IERC721', WAGMI_TABLE)
+      punkscapeContract = await ethers.getContractAt('IERC721', PUNKSCAPE)
+    })
+
+    describe('Initialize ERC721', () => {
       it('Receives an ERC721 NFT and initialises the auction', async () => {
         const now = nowInSeconds()
         await expect(await punkscapeContract
@@ -126,7 +126,7 @@ describe('NFTsForUkraine', function () {
       })
     })
 
-    describe.only('Initialize ERC1155', () => {
+    describe('Initialize ERC1155', () => {
       let akuti
       let eightEightEightContract
       let the10KTFContract
@@ -217,9 +217,70 @@ describe('NFTsForUkraine', function () {
       })
     })
 
-    describe('Bid', () => {
+    describe('Bids', () => {
+      const startAuction = (id = 7374) => punkscapeContract.connect(cv)[`safeTransferFrom(address,address,uint256)`](
+        COMMUNITY_VAULT,
+        nftsForUkraineContract.address,
+        id
+      )
 
+      it('should allow bids on started auctions and update the current price afterwards', async () => {
+        await startAuction(7374)
+        const value = ethers.utils.parseEther('0.2')
+
+        await expect(nftsForUkraineContract.connect(person1).bid(0, { value }))
+          .to.emit(nftsForUkraineContract, 'Bid')
+          .withArgs(0, value, person1.address)
+
+          expect(await nftsForUkraineContract.currentBidPrice(0)).to.equal(ethers.utils.parseEther('0.25'))
+          const auction = await nftsForUkraineContract.getAuction(0)
+          expect(auction.latestBidder).to.equal(person1.address)
+          expect(auction.latestBid).to.equal(ethers.utils.parseEther('0.2'))
+          expect(auction.settled).to.equal(false)
+      })
+
+      it('should extend the auction time if a bid is placed within the last 15 minutes of an auction', async () => {
+        let block = await ethers.provider.getBlock('latest')
+        await startAuction(4804)
+
+        let value = ethers.utils.parseEther('0.2')
+        await nftsForUkraineContract.connect(person1).bid(0, { value })
+
+        block = await ethers.provider.getBlock('latest')
+
+        const secondsUntilAlmost24Hours = 23 * 60 * 60 + 55 * 60
+
+        await hre.network.provider.send('evm_increaseTime', [secondsUntilAlmost24Hours])
+        await hre.network.provider.send('evm_mine')
+
+        value = ethers.utils.parseEther('0.3')
+        await expect(nftsForUkraineContract.connect(person2).bid(0, { value }))
+          .to.emit(nftsForUkraineContract, 'AuctionExtended')
+        block = await ethers.provider.getBlock('latest')
+        in15Minutes = block.timestamp + 900
+        expect((await nftsForUkraineContract.getAuction(0)).endTimestamp).to.equal(in15Minutes)
+
+        const another15Minutes = 920
+        await hre.network.provider.send('evm_increaseTime', [another15Minutes])
+        await hre.network.provider.send('evm_mine')
+
+        value = ethers.utils.parseEther('0.4')
+        await expect(nftsForUkraineContract.connect(person1).bid(0, { value }))
+          .to.be.revertedWith('Auction is not active.')
+      })
+
+      it('should pay back previous bidders on new bids', async () => {
+        await startAuction(6954)
+
+        let value = ethers.utils.parseEther('0.2')
+        await nftsForUkraineContract.connect(person1).bid(0, { value })
+
+        value = ethers.utils.parseEther('0.3')
+        await expect(await nftsForUkraineContract.connect(person2).bid(0, { value }))
+          .to.changeEtherBalance(person1, ethers.utils.parseEther('0.2'))
+      })
     })
+
     describe('Settle', () => {
 
     })
