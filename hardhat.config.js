@@ -14,7 +14,7 @@ const HARDHAT_NETWORK_CONFIG = {
   chainId: 1337,
   forking: {
     url: process.env.MAINNET_URL || '',
-    blockNumber: 14285500, // Feb 27th
+    blockNumber: 14294723, // Feb 28th, after Floating Island Debacle
   },
 }
 
