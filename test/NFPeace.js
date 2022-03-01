@@ -104,6 +104,22 @@ describe('NFPeace', function () {
           .withArgs(1)
       })
 
+      it('Receives an ERC721 NFT and initialises the auction without a custom starting price', async () => {
+        await expect(await punkscapeContract
+          .connect(cv)[`safeTransferFrom(address,address,uint256,bytes)`](
+            COMMUNITY_VAULT,
+            nfPeaceContract.address,
+            9185,
+            ethers.utils.arrayify(ethers.BigNumber.from('0'))
+          )
+        )
+          .to.emit(nfPeaceContract, 'AuctionInitialised')
+          .withArgs(0)
+
+        const auction = await nfPeaceContract.getAuction(0)
+        expect(auction.startingPrice).to.equal(ethers.utils.parseEther('0.05'))
+      })
+
       it('Receives an ERC721 NFT and initialises the auction with a custom starting price', async () => {
         await expect(await twentySevenYearScapesContract
           .connect(cv)[`safeTransferFrom(address,address,uint256,bytes)`](
