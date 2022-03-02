@@ -47,7 +47,7 @@ contract NFPeace is
     /// @dev Each auction is identified by an ID
     mapping(uint256 => Auction) private _auctions;
 
-    /// @dev Emitted when a new bid is entered.
+    /// @dev Emitted when an NFT is sent to the contract.
     event AuctionInitialised(uint64 indexed auctionId);
 
     /// @dev Emitted when a new bid is entered.
