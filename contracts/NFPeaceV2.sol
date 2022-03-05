@@ -114,9 +114,7 @@ contract NFPeaceV2 is
 
         // Pay back previous bidder
         if (_hasBid(auction)) {
-            bool sent = payable(auction.latestBidder).send(auction.latestBid);
-
-            if (! sent) {
+            if (!payable(auction.latestBidder).send(auction.latestBid)) {
                 _balances[auction.latestBidder] += auction.latestBid;
             }
         }
@@ -152,6 +150,19 @@ contract NFPeaceV2 is
         // End the auction
         auction.settled = true;
         emit AuctionSettled(auctionId);
+    }
+
+    /// @dev Withdraw user balance in case automatic refund in bid did fail.
+    function withdraw ()
+        external payable
+    {
+        uint256 amount = _balances[msg.sender];
+        require(amount > 0, "No balance to withdraw.");
+        // Set balance to zero because it coul be called again in receive before send returns
+        _balances[msg.sender] = 0;
+        if (!payable(msg.sender).send(amount)) {
+            _balances[msg.sender] = amount;
+        }
     }
 
     /// @dev Hook for `saveTransferFrom` of ERC721 tokens to this contract
