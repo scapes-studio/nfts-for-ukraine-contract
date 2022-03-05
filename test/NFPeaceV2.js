@@ -38,7 +38,7 @@ describe.only('NFPeaceV2', function () {
     nfPeaceContract = await NFPeaceV2.deploy()
     await nfPeaceContract.deployed()
 
-    nfPeaceAttackerContract = await NFPeaceAttacker.deploy()
+    nfPeaceAttackerContract = await NFPeaceAttacker.deploy(nfPeaceContract.address)
     await nfPeaceAttackerContract.deployed()
   })
 
@@ -302,6 +302,46 @@ describe.only('NFPeaceV2', function () {
         await expect(await nfPeaceContract.connect(person2).bid(0, { value }))
           .to.changeEtherBalance(person1, ethers.utils.parseEther('0.2'))
       })
+
+      it('should allow bids if repayment fails and allow withdrawal later', async () => {
+        await startAuction(826)
+        value = ethers.utils.parseEther('0.2')
+
+        // bid from attack contract
+        await expect(nfPeaceAttackerContract.connect(person1).bid(0, { value }))
+          .to.emit(nfPeaceContract, 'Bid')
+          .withArgs(0, value, nfPeaceAttackerContract.address)
+
+          expect(await nfPeaceContract.currentBidPrice(0)).to.equal(ethers.utils.parseEther('0.25'))
+          auction = await nfPeaceContract.getAuction(0)
+          expect(auction.latestBidder).to.equal(nfPeaceAttackerContract.address)
+          expect(auction.latestBid).to.equal(ethers.utils.parseEther('0.2'))
+          expect(auction.settled).to.equal(false)
+
+        // normal bid from user
+        value = ethers.utils.parseEther('0.4')
+        await expect(nfPeaceContract.connect(person1).bid(0, { value }))
+          .to.emit(nfPeaceContract, 'Bid')
+          .withArgs(0, value, person1.address)
+
+          expect(await nfPeaceContract.currentBidPrice(0)).to.equal(ethers.utils.parseEther('0.45'))
+          auction = await nfPeaceContract.getAuction(0)
+          expect(auction.latestBidder).to.equal(person1.address)
+          expect(auction.latestBid).to.equal(ethers.utils.parseEther('0.4'))
+          expect(auction.settled).to.equal(false)
+
+        // withdarw with no balance should fail
+        await expect(nfPeaceContract.connect(person1).withdraw())
+          .to.be.revertedWith('No balance to withdraw.')
+
+        // withdraw balance from attacker
+        await expect(await nfPeaceAttackerContract.connect(person1).withdraw())
+          .to.changeEtherBalance(person1, ethers.utils.parseEther('0.2'))
+
+        // withdrawing again should fail
+        await expect(nfPeaceAttackerContract.connect(person1).withdraw())
+          .to.be.revertedWith('No balance to withdraw.')
+        })
     })
 
     describe('Settle', () => {
