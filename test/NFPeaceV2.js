@@ -75,6 +75,15 @@ describe.only('NFPeaceV2', function () {
       punkscapeContract = await ethers.getContractAt('IERC721', PUNKSCAPE)
     })
 
+    describe('V1 Auctions', () => {
+      it('Returns a previous V1 auction', async () => {
+        const auction = await nfPeaceContract.getAuction(1)
+
+        expect(auction.tokenId).to.equal(19)
+        expect(auction.tokenContract).to.equal(TWENTY_SEVEN_YEAR_SCAPES)
+      })
+    })
+
     describe('Initialize ERC721', () => {
       it('Receives an ERC721 NFT and initialises the auction', async () => {
         const now = nowInSeconds()
