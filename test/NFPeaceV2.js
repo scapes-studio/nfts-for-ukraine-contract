@@ -85,9 +85,9 @@ describe.only('NFPeaceV2', function () {
             8433)
         )
           .to.emit(nfPeaceContract, 'AuctionInitialised')
-          .withArgs(0)
+          .withArgs(12)
 
-        const auction = await nfPeaceContract.getAuction(0)
+        const auction = await nfPeaceContract.getAuction(12)
         expect(auction.tokenContract).to.equal(punkscapeContract.address)
         expect(auction.tokenId).to.equal(8433)
         expect(auction.latestBidder).to.equal(COMMUNITY_VAULT)
@@ -107,7 +107,7 @@ describe.only('NFPeaceV2', function () {
             2676)
         )
           .to.emit(nfPeaceContract, 'AuctionInitialised')
-          .withArgs(1)
+          .withArgs(13)
       })
 
       it('Receives an ERC721 NFT and initialises the auction without a custom starting price', async () => {
@@ -120,25 +120,25 @@ describe.only('NFPeaceV2', function () {
           )
         )
           .to.emit(nfPeaceContract, 'AuctionInitialised')
-          .withArgs(0)
+          .withArgs(12)
 
-        const auction = await nfPeaceContract.getAuction(0)
+        const auction = await nfPeaceContract.getAuction(12)
         expect(auction.startingPrice).to.equal(ethers.utils.parseEther('0.05'))
       })
 
       it('Receives an ERC721 NFT and initialises the auction with a custom starting price', async () => {
-        await expect(await twentySevenYearScapesContract
+        await expect(await punkscapeContract
           .connect(cv)[`safeTransferFrom(address,address,uint256,bytes)`](
             COMMUNITY_VAULT,
             nfPeaceContract.address,
-            19,
+            651,
             ethers.utils.arrayify(ethers.utils.parseEther('2'))
           )
         )
           .to.emit(nfPeaceContract, 'AuctionInitialised')
-          .withArgs(0)
+          .withArgs(12)
 
-        const auction = await nfPeaceContract.getAuction(0)
+        const auction = await nfPeaceContract.getAuction(12)
         expect(auction.startingPrice).to.equal(ethers.utils.parseEther('2'))
       })
 
@@ -190,9 +190,9 @@ describe.only('NFPeaceV2', function () {
           )
         )
           .to.emit(nfPeaceContract, 'AuctionInitialised')
-          .withArgs(0)
+          .withArgs(12)
 
-        const auction = await nfPeaceContract.getAuction(0)
+        const auction = await nfPeaceContract.getAuction(12)
         expect(auction.tokenContract).to.equal(eightEightEightContract.address)
         expect(auction.tokenId).to.equal(1)
         expect(auction.latestBidder).to.equal(AKUTI)
@@ -216,9 +216,9 @@ describe.only('NFPeaceV2', function () {
           )
         )
           .to.emit(nfPeaceContract, 'AuctionInitialised')
-          .withArgs(0)
+          .withArgs(12)
 
-        const auction = await nfPeaceContract.getAuction(0)
+        const auction = await nfPeaceContract.getAuction(12)
         expect(auction.tokenAmount).to.equal(2)
       })
 
@@ -233,14 +233,14 @@ describe.only('NFPeaceV2', function () {
           )
         )
           .to.emit(nfPeaceContract, 'AuctionInitialised')
-          .withArgs(0)
+          .withArgs(12)
           .to.emit(nfPeaceContract, 'AuctionInitialised')
-          .withArgs(1)
+          .withArgs(13)
 
-        const auction1 = await nfPeaceContract.getAuction(0)
+        const auction1 = await nfPeaceContract.getAuction(12)
         expect(auction1.tokenId).to.equal(2)
         expect(auction1.startingPrice).to.equal(ethers.utils.parseEther('5'))
-        const auction2 = await nfPeaceContract.getAuction(1)
+        const auction2 = await nfPeaceContract.getAuction(13)
         expect(auction2.tokenId).to.equal(4)
         expect(auction2.startingPrice).to.equal(ethers.utils.parseEther('5'))
       })
@@ -251,12 +251,12 @@ describe.only('NFPeaceV2', function () {
         await startAuction(7374)
         const value = ethers.utils.parseEther('0.2')
 
-        await expect(nfPeaceContract.connect(person1).bid(0, { value }))
+        await expect(nfPeaceContract.connect(person1).bid(12, { value }))
           .to.emit(nfPeaceContract, 'Bid')
-          .withArgs(0, value, person1.address)
+          .withArgs(12, value, person1.address)
 
-          expect(await nfPeaceContract.currentBidPrice(0)).to.equal(ethers.utils.parseEther('0.25'))
-          const auction = await nfPeaceContract.getAuction(0)
+          expect(await nfPeaceContract.currentBidPrice(12)).to.equal(ethers.utils.parseEther('0.25'))
+          const auction = await nfPeaceContract.getAuction(12)
           expect(auction.latestBidder).to.equal(person1.address)
           expect(auction.latestBid).to.equal(ethers.utils.parseEther('0.2'))
           expect(auction.settled).to.equal(false)
@@ -267,7 +267,7 @@ describe.only('NFPeaceV2', function () {
         await startAuction(4804)
 
         let value = ethers.utils.parseEther('0.2')
-        await nfPeaceContract.connect(person1).bid(0, { value })
+        await nfPeaceContract.connect(person1).bid(12, { value })
 
         block = await ethers.provider.getBlock('latest')
 
@@ -277,18 +277,18 @@ describe.only('NFPeaceV2', function () {
         await hre.network.provider.send('evm_mine')
 
         value = ethers.utils.parseEther('0.3')
-        await expect(nfPeaceContract.connect(person2).bid(0, { value }))
+        await expect(nfPeaceContract.connect(person2).bid(12, { value }))
           .to.emit(nfPeaceContract, 'AuctionExtended')
         block = await ethers.provider.getBlock('latest')
         in15Minutes = block.timestamp + 900
-        expect((await nfPeaceContract.getAuction(0)).endTimestamp).to.equal(in15Minutes)
+        expect((await nfPeaceContract.getAuction(12)).endTimestamp).to.equal(in15Minutes)
 
         const another15Minutes = 920
         await hre.network.provider.send('evm_increaseTime', [another15Minutes])
         await hre.network.provider.send('evm_mine')
 
         value = ethers.utils.parseEther('0.4')
-        await expect(nfPeaceContract.connect(person1).bid(0, { value }))
+        await expect(nfPeaceContract.connect(person1).bid(12, { value }))
           .to.be.revertedWith('Auction is not active.')
       })
 
@@ -296,10 +296,10 @@ describe.only('NFPeaceV2', function () {
         await startAuction(6954)
 
         let value = ethers.utils.parseEther('0.2')
-        await nfPeaceContract.connect(person1).bid(0, { value })
+        await nfPeaceContract.connect(person1).bid(12, { value })
 
         value = ethers.utils.parseEther('0.3')
-        await expect(await nfPeaceContract.connect(person2).bid(0, { value }))
+        await expect(await nfPeaceContract.connect(person2).bid(12, { value }))
           .to.changeEtherBalance(person1, ethers.utils.parseEther('0.2'))
       })
 
@@ -308,24 +308,24 @@ describe.only('NFPeaceV2', function () {
         value = ethers.utils.parseEther('0.2')
 
         // bid from attack contract
-        await expect(nfPeaceAttackerContract.connect(person1).bid(0, { value }))
+        await expect(nfPeaceAttackerContract.connect(person1).bid(12, { value }))
           .to.emit(nfPeaceContract, 'Bid')
-          .withArgs(0, value, nfPeaceAttackerContract.address)
+          .withArgs(12, value, nfPeaceAttackerContract.address)
 
-          expect(await nfPeaceContract.currentBidPrice(0)).to.equal(ethers.utils.parseEther('0.25'))
-          auction = await nfPeaceContract.getAuction(0)
+          expect(await nfPeaceContract.currentBidPrice(12)).to.equal(ethers.utils.parseEther('0.25'))
+          auction = await nfPeaceContract.getAuction(12)
           expect(auction.latestBidder).to.equal(nfPeaceAttackerContract.address)
           expect(auction.latestBid).to.equal(ethers.utils.parseEther('0.2'))
           expect(auction.settled).to.equal(false)
 
         // normal bid from user
         value = ethers.utils.parseEther('0.4')
-        await expect(nfPeaceContract.connect(person1).bid(0, { value }))
+        await expect(nfPeaceContract.connect(person1).bid(12, { value }))
           .to.emit(nfPeaceContract, 'Bid')
-          .withArgs(0, value, person1.address)
+          .withArgs(12, value, person1.address)
 
-          expect(await nfPeaceContract.currentBidPrice(0)).to.equal(ethers.utils.parseEther('0.45'))
-          auction = await nfPeaceContract.getAuction(0)
+          expect(await nfPeaceContract.currentBidPrice(12)).to.equal(ethers.utils.parseEther('0.45'))
+          auction = await nfPeaceContract.getAuction(12)
           expect(auction.latestBidder).to.equal(person1.address)
           expect(auction.latestBid).to.equal(ethers.utils.parseEther('0.4'))
           expect(auction.settled).to.equal(false)
@@ -348,7 +348,7 @@ describe.only('NFPeaceV2', function () {
       it('should not allow someone to settle an auction before it is complete', async () => {
         await startAuction(9898)
 
-        await expect(nfPeaceContract.connect(person1).settle(0))
+        await expect(nfPeaceContract.connect(person1).settle(12))
           .to.be.revertedWith('Auction not complete.')
       })
 
@@ -356,7 +356,7 @@ describe.only('NFPeaceV2', function () {
         await startAuction(3210)
 
         let value = ethers.utils.parseEther('0.2')
-        await nfPeaceContract.connect(person1).bid(0, { value })
+        await nfPeaceContract.connect(person1).bid(12, { value })
 
         const afterAuction = 24 * 60 * 60 + 20 // 24h and 20s
         await hre.network.provider.send('evm_increaseTime', [afterAuction])
@@ -364,19 +364,19 @@ describe.only('NFPeaceV2', function () {
 
         const charityBalance = await ethers.provider.getBalance(CHARITY_ADDRESS)
 
-        await expect(await nfPeaceContract.connect(person2).settle(0))
+        await expect(await nfPeaceContract.connect(person2).settle(12))
           .to.emit(nfPeaceContract, 'AuctionSettled')
-          .withArgs(0)
+          .withArgs(12)
 
         expect(await ethers.provider.getBalance(CHARITY_ADDRESS)).to.equal(charityBalance.add(value))
         expect(await punkscapeContract.ownerOf(3210)).to.equal(person1.address)
 
-        const auction = await nfPeaceContract.getAuction(0)
+        const auction = await nfPeaceContract.getAuction(12)
         expect(auction.latestBidder).to.equal(person1.address)
         expect(auction.latestBid).to.equal(ethers.utils.parseEther('0.2'))
         expect(auction.settled).to.equal(true)
 
-        await expect(nfPeaceContract.connect(person2).settle(0))
+        await expect(nfPeaceContract.connect(person2).settle(12))
           .to.be.revertedWith('Auction already settled.')
       })
 
@@ -389,21 +389,21 @@ describe.only('NFPeaceV2', function () {
 
         const charityBalance = await ethers.provider.getBalance(CHARITY_ADDRESS)
 
-        await expect(await nfPeaceContract.connect(person1).settle(0))
+        await expect(await nfPeaceContract.connect(person1).settle(12))
           .to.emit(nfPeaceContract, 'AuctionSettled')
-          .withArgs(0)
+          .withArgs(12)
 
         expect(await ethers.provider.getBalance(CHARITY_ADDRESS)).to.equal(charityBalance)
         expect(await punkscapeContract.ownerOf(4735)).to.equal(COMMUNITY_VAULT)
 
-        const auction = await nfPeaceContract.getAuction(0)
+        const auction = await nfPeaceContract.getAuction(12)
         expect(auction.latestBidder).to.equal(COMMUNITY_VAULT)
         expect(auction.latestBid).to.equal(ethers.utils.parseEther('0'))
         expect(auction.settled).to.equal(true)
       })
 
       it(`should not allow anyone to settle an auction that doesn't exist`, async () => {
-        await expect(nfPeaceContract.connect(person1).settle(0))
+        await expect(nfPeaceContract.connect(person1).settle(12))
           .to.be.revertedWith('Auction does not exist.')
       })
     })

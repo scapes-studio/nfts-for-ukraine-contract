@@ -8,12 +8,18 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 
+import "./NFPeace.sol";
+
 contract NFPeaceV2 is
     ERC165,
     IERC721Receiver,
     IERC1155Receiver,
     ReentrancyGuard
 {
+    /// @notice The previous NFPeace (V1) contract. NFPeaceV2 fixes a potential exploit.
+    /// @dev The V1 NFPeace contract
+    NFPeace public constant NFPEACE_V1 = NFPeace(0x0000000011E48D382b4F627437A2bBAc3b10F90e);
+
     /// @notice Unchain (https://unchain.fund) is a charity project created by blockchain activists. Its goal is to break the chain of war which the Russian Federation started against Ukraine.
     /// @dev The wallet address of the humanitarian relief fund unchain.fund
     address payable public constant CHARITY_ADDRESS = payable(0x10E1439455BD2624878b243819E31CfEE9eb721C);
@@ -28,6 +34,9 @@ contract NFPeaceV2 is
 
     /// @dev The minimum value of an auction
     uint64 public constant DEFAULT_STARTING_PRICE = 0.05 ether;
+
+    /// @dev The initial auction ID of the V2 NFPeace contract
+    uint64 public initialAuctionId = 0;
 
     /// @dev The next auction ID
     uint64 public nextAuctionId = 0;
@@ -62,6 +71,12 @@ contract NFPeaceV2 is
     /// @dev Emitted when an auction is settled, the NFT is sent to the winner and the funds sent to the charity.
     event AuctionSettled(uint64 indexed auctionId);
 
+    /// @dev Set the initial tokenID.
+    constructor () {
+        initialAuctionId = NFPEACE_V1.nextAuctionId();
+        nextAuctionId = initialAuctionId;
+    }
+
     /// @dev Get an Auction by its ID
     function getAuction (uint64 auctionId)
         public view
@@ -76,6 +91,11 @@ contract NFPeaceV2 is
             uint8 tokenAmount,
             bool settled
     ) {
+        // Proxy V1 auctions through to the V1 contract.
+        if (auctionId < initialAuctionId) {
+            return NFPEACE_V1.getAuction(auctionId);
+        }
+
         Auction memory auction = _auctions[auctionId];
 
         return (
