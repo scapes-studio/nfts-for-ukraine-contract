@@ -207,8 +207,8 @@ describe.only('NFPeaceV2', function () {
         expect(auction.latestBidder).to.equal(AKUTI)
         expect(auction.latestBid).to.equal(0)
         expect(auction.startingPrice).to.equal(ethers.utils.parseEther('0.05'))
-        // test _now_ + 24h to actual endAuction delta sould be less than 20 seconds
-        expect(auction.endTimestamp - (now + 24 * 60 * 60)).to.be.lessThan(20)
+        // test _now_ + 24h to actual endAuction delta sould be less than 30 seconds
+        expect(auction.endTimestamp - (now + 24 * 60 * 60)).to.be.lessThan(30)
         expect(auction.tokenERCStandard).to.equal(1155)
         expect(auction.tokenAmount).to.equal(1)
         expect(auction.settled).to.equal(false)
@@ -321,23 +321,29 @@ describe.only('NFPeaceV2', function () {
           .to.emit(nfPeaceContract, 'Bid')
           .withArgs(12, value, nfPeaceAttackerContract.address)
 
-          expect(await nfPeaceContract.currentBidPrice(12)).to.equal(ethers.utils.parseEther('0.25'))
-          auction = await nfPeaceContract.getAuction(12)
-          expect(auction.latestBidder).to.equal(nfPeaceAttackerContract.address)
-          expect(auction.latestBid).to.equal(ethers.utils.parseEther('0.2'))
-          expect(auction.settled).to.equal(false)
+        expect(await nfPeaceContract.currentBidPrice(12)).to.equal(ethers.utils.parseEther('0.25'))
+        auction = await nfPeaceContract.getAuction(12)
+        expect(auction.latestBidder).to.equal(nfPeaceAttackerContract.address)
+        expect(auction.latestBid).to.equal(ethers.utils.parseEther('0.2'))
+        expect(auction.settled).to.equal(false)
 
         // normal bid from user
+        const attackerBalance = await ethers.provider.getBalance(nfPeaceAttackerContract.address)
+
         value = ethers.utils.parseEther('0.4')
         await expect(nfPeaceContract.connect(person1).bid(12, { value }))
           .to.emit(nfPeaceContract, 'Bid')
           .withArgs(12, value, person1.address)
 
-          expect(await nfPeaceContract.currentBidPrice(12)).to.equal(ethers.utils.parseEther('0.45'))
-          auction = await nfPeaceContract.getAuction(12)
-          expect(auction.latestBidder).to.equal(person1.address)
-          expect(auction.latestBid).to.equal(ethers.utils.parseEther('0.4'))
-          expect(auction.settled).to.equal(false)
+        expect(await nfPeaceContract.getBalance(nfPeaceAttackerContract.address))
+          .to.equal(ethers.utils.parseEther('0.2'))
+        expect(await ethers.provider.getBalance(nfPeaceAttackerContract.address))
+          .to.equal(attackerBalance)
+        expect(await nfPeaceContract.currentBidPrice(12)).to.equal(ethers.utils.parseEther('0.45'))
+        auction = await nfPeaceContract.getAuction(12)
+        expect(auction.latestBidder).to.equal(person1.address)
+        expect(auction.latestBid).to.equal(ethers.utils.parseEther('0.4'))
+        expect(auction.settled).to.equal(false)
 
         // withdraw with no balance should fail
         await expect(nfPeaceContract.connect(person1).withdraw())

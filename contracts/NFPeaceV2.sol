@@ -172,10 +172,13 @@ contract NFPeaceV2 is
         emit AuctionSettled(auctionId);
     }
 
+    /// @dev Get the balance for an address.
+    function getBalance (address _address) external view returns (uint256) {
+        return _balances[_address];
+    }
+
     /// @dev Withdraw user balance in case automatic refund in bid failed.
-    function withdraw ()
-        external payable
-    {
+    function withdraw () external {
         uint256 amount = _balances[msg.sender];
         require(amount > 0, "No balance to withdraw.");
         // Set balance to zero because it could be called again in receive before send returns
