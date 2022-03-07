@@ -36,7 +36,7 @@ module.exports = {
       url: process.env.MAINNET_URL || '',
       accounts:
         process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
-      gasPrice: 60000000000 // 60 Gwei max on mainnet
+      gasPrice: 35000000000 // 35 Gwei max on mainnet
     },
     rinkeby: {
       url: process.env.RINKEBY_URL || '',
