@@ -330,7 +330,7 @@ describe.only('NFPeaceV2', function () {
           expect(auction.latestBid).to.equal(ethers.utils.parseEther('0.4'))
           expect(auction.settled).to.equal(false)
 
-        // withdarw with no balance should fail
+        // withdraw with no balance should fail
         await expect(nfPeaceContract.connect(person1).withdraw())
           .to.be.revertedWith('No balance to withdraw.')
 

@@ -152,13 +152,13 @@ contract NFPeaceV2 is
         emit AuctionSettled(auctionId);
     }
 
-    /// @dev Withdraw user balance in case automatic refund in bid did fail.
+    /// @dev Withdraw user balance in case automatic refund in bid failed.
     function withdraw ()
         external payable
     {
         uint256 amount = _balances[msg.sender];
         require(amount > 0, "No balance to withdraw.");
-        // Set balance to zero because it coul be called again in receive before send returns
+        // Set balance to zero because it could be called again in receive before send returns
         _balances[msg.sender] = 0;
         if (!payable(msg.sender).send(amount)) {
             _balances[msg.sender] = amount;
